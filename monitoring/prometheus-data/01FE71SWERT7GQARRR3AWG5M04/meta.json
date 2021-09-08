@@ -1,0 +1,17 @@
+{
+	"ulid": "01FE71SWERT7GQARRR3AWG5M04",
+	"minTime": 1630154799459,
+	"maxTime": 1630159200000,
+	"stats": {
+		"numSamples": 399,
+		"numSeries": 399,
+		"numChunks": 399
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01FE71SWERT7GQARRR3AWG5M04"
+		]
+	},
+	"version": 1
+}

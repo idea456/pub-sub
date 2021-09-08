@@ -1,0 +1,17 @@
+{
+	"ulid": "01FEZA19KEEH4VZ7YNPW3EZXT7",
+	"minTime": 1630980001760,
+	"maxTime": 1630987200000,
+	"stats": {
+		"numSamples": 601920,
+		"numSeries": 418,
+		"numChunks": 5016
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01FEZA19KEEH4VZ7YNPW3EZXT7"
+		]
+	},
+	"version": 1
+}

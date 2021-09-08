@@ -1,0 +1,117 @@
+version: '3'
+services:
+  app:
+    build: ./producer
+    restart: always
+    ports:
+      - 9000:9000
+    expose:
+      - 9000
+    depends_on:
+      - rabbitmq
+    command: sh -c '/bin/wait-for-it.sh rabbitmq:5672 --timeout=20 -- go run main.go hello....'
+    networks: 
+      - rabbit
+  print-server:
+    build: ./consumer
+    restart: always
+    ports:
+      - 9005:9005
+    depends_on: 
+      - rabbitmq
+      - app
+    command: sh -c '/bin/wait-for-it.sh app:9000 --timeout=30 -- go run main.go print'
+    networks: 
+      - rabbit
+  pi-server:
+    build: ./consumer
+    restart: always
+    ports:
+      - 9006:9006
+    # expose:
+    #   - 9005
+    depends_on: 
+      - rabbitmq
+      - app
+    command: sh -c '/bin/wait-for-it.sh app:9000 --timeout=30 -- go run main.go pi'
+    networks: 
+      - rabbit
+  fibonacci-server:
+    build: ./consumer
+    restart: always
+    ports:
+      - 9007:9007
+    depends_on: 
+      - rabbitmq
+      - app
+    command: sh -c '/bin/wait-for-it.sh app:9000 --timeout=30 -- go run main.go fibonacci'
+    networks: 
+      - rabbit
+  prime-server:
+    build: ./consumer
+    restart: always
+    ports:
+      - 9008:9008
+    depends_on: 
+      - rabbitmq
+      - app
+    command: sh -c '/bin/wait-for-it.sh app:9000 --timeout=30 -- go run main.go prime'
+    networks: 
+      - rabbit
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    ports:
+      - 15672:15672
+      - 5672:5672
+    expose:
+      - 5672
+      - 15672
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:15672"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks: 
+      - rabbit
+  prometheus:
+    image: prom/prometheus:v2.27.1
+    restart: always
+    depends_on: 
+      - app
+    ports:
+      - 9090:9090
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - ./monitoring/prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      # - ["CMD", "wget", "-0", "./wait-for-it.sh", "https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh"]
+      # - curl http://app:9000
+      # - 'wget -O /bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh'
+      # - chmod +x /bin/wait-for-it.sh
+      # - sh -c '/bin/wait-for-it.sh app:9000 --timeout=10
+    networks: 
+      - rabbit
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - ./monitoring/grafana-data:/var/lib/grafana
+      - ./monitoring/grafana-provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana-provisioning/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_USER=grafana
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks: 
+      - rabbit
+
+networks: 
+  rabbit:
+    driver: bridge
